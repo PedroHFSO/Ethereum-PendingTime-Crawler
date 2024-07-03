@@ -1,5 +1,12 @@
 const Web3 = require("web3")
 const http = require('http');
+require('dotenv').config();
+
+
+const interval = process.env.CRAWLER_INTERVAL || 60000; // default to 60000ms if not set
+const web3Provider = process.env.DATA_SOURCE_URL; //Add your provider here. For this project, I was using infura.
+const storagePath = process.env.STORAGE_PATH;
+const logLevel = process.env.LOG_LEVEL || 'info';
 
 var options = {
   timeout: 30000,
@@ -16,12 +23,11 @@ var options = {
 };
 
 var fs = require('fs')
-var logger = fs.createWriteStream('dataset.csv', {
+var logger = fs.createWriteStream(storagePath.concat('/dataset.csv'), {
   flags: 'a' // 'a' means appending (old data will be preserved)
 })
 
-const web3_provider = 'wss://mainnet.infura.io/ws/v3/<ADDYOURKEYHERE>' //Add your provider here. For this project, I was using infura.
-const web3 = new Web3(new Web3.providers.WebsocketProvider(web3_provider), options = options)
+const web3 = new Web3(new Web3.providers.WebsocketProvider(web3Provider), options = options)
 
 const subscription = web3.eth.subscribe("pendingTransactions", (err, res) => {
   if (err) console.error(err);
@@ -95,14 +101,10 @@ const newBlocks = function(){
 pendingTransactions();
 newBlocks();
 
-const hours = 3;
-const min = 60*hours;
-const timeout = false;
-
 if(timeout){
     setTimeout(function() {
         logger.end();
         process.exit();
       }
-    , min*60000);
+    , interval);
 }
